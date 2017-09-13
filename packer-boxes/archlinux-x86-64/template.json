@@ -1,0 +1,49 @@
+{
+  "variables": {
+    "iso_url": "https://mirrors.ustc.edu.cn/archlinux/iso/latest/archlinux-2016.07.01-dual.iso",
+    "iso_checksum": "b5caa9cddab841e508ab46722d220986b8f5fdac",
+    "iso_checksum_type": "sha1"
+  },
+  "builders": [{
+    "type": "virtualbox-iso",
+    "guest_os_type": "ArchLinux_64",
+    "guest_additions_mode": "disable",
+    "disk_size": 40960,
+    "hard_drive_interface": "sata",
+    "iso_interface": "sata",
+    "headless": false,
+    "http_directory": "http",
+    "iso_url": "{{ user `iso_url` }}",
+    "iso_checksum": "{{ user `iso_checksum` }}",
+    "iso_checksum_type": "{{ user `iso_checksum_type` }}",
+    "ssh_username": "root",
+    "ssh_password": "vagrant",
+    "ssh_timeout": "20m",
+    "vboxmanage": [
+      ["modifyvm", "{{.Name}}", "--memory", "1024"],
+      ["modifyvm", "{{.Name}}", "--cpus", "2"],
+      ["modifyvm", "{{.Name}}", "--rtcuseutc", "on"],
+      ["modifyvm", "{{.Name}}", "--firmware", "efi"],
+      ["modifyvm", "{{.Name}}", "--vrde", "off"]
+    ],
+    "shutdown_command": "sudo systemctl poweroff",
+    "boot_wait": "35s",
+    "boot_command": [
+      "<enter><wait5>",
+      "curl http://{{.HTTPIP}}:{{.HTTPPort}}/install_base.sh -O<enter><wait>",
+      "bash install_base.sh && systemctl reboot<enter>"
+    ]
+  }],
+  "provisioners": [{
+    "type": "shell",
+    "scripts": [
+      "scripts/vagrant.sh",
+      "scripts/provision.sh",
+      "scripts/cleanup.sh"
+    ]
+  }],
+  "post-processors": [{
+    "type": "vagrant",
+    "output": "archlinux-x86_64.box"
+  }]
+}
